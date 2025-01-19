@@ -51,7 +51,6 @@
             text-align: left;
         }
     </style>
-    <!-- Properly include the JSZip library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
@@ -98,82 +97,90 @@
 
                 // Search for components.json file
                 Object.keys(contents.files).forEach(function(filename) {
-                    if (filename.endsWith("component.json")) {
+                    if (filename.endsWith("components.json")) {
                         componentJson = contents.files[filename];
                     }
                 });
 
                 if (!componentJson) {
-                    alert("component.json not found in .aix file.");
+                    alert("components.json not found in .aix file.");
                     return;
                 }
 
                 componentJson.async("text").then(function(text) {
-                    const jsonData = JSON.parse(text);
+                    let jsonData = null;
+                    try {
+                        jsonData = JSON.parse(text);
+                    } catch (e) {
+                        alert("Error parsing JSON: " + e.message);
+                        return;
+                    }
+
                     builder = "";
+                    if (Array.isArray(jsonData)) {
+                        jsonData.forEach(function(component) {
+                            builder += `<h3> Docs for: ${component.name}</h3>`;
 
-                    jsonData.forEach(function(component) {
-                        builder += `<h3> Docs for: ${component.name}</h3>`;
+                            // Add events
+                            if (component.events && component.events.length > 0) {
+                                builder += "<h4>Events:</h4><ul>";
+                                component.events.forEach(function(event) {
+                                    builder += `<li><strong>${event.name}</strong>: ${event.description}</li>`;
+                                });
+                                builder += "</ul>";
+                            }
 
-                        // Add events
-                        if (component.events && component.events.length > 0) {
-                            builder += "<h4>Events:</h4><ul>";
-                            component.events.forEach(function(event) {
-                                builder += `<li><strong>${event.name}</strong>: ${event.description}</li>`;
-                            });
-                            builder += "</ul>";
-                        }
+                            // Add methods
+                            if (component.methods && component.methods.length > 0) {
+                                builder += "<h4>Methods:</h4><ul>";
+                                component.methods.forEach(function(method) {
+                                    builder += `<li><strong>${method.name}</strong>: ${method.description}</li>`;
+                                    if (method.parameters && method.parameters.length > 0) {
+                                        builder += "<ul>";
+                                        method.parameters.forEach(function(param) {
+                                            builder += `<li><strong>Parameter:</strong> ${param.name} (Type: ${param.type})</li>`;
+                                        });
+                                        builder += "</ul>";
+                                    }
+                                });
+                                builder += "</ul>";
+                            }
 
-                        // Add methods
-                        if (component.methods && component.methods.length > 0) {
-                            builder += "<h4>Methods:</h4><ul>";
-                            component.methods.forEach(function(method) {
-                                builder += `<li><strong>${method.name}</strong>: ${method.description}</li>`;
-                                if (method.parameters && method.parameters.length > 0) {
-                                    builder += "<ul>";
-                                    method.parameters.forEach(function(param) {
-                                        builder += `<li><strong>Parameter:</strong> ${param.name} (Type: ${param.type})</li>`;
-                                    });
-                                    builder += "</ul>";
-                                }
-                            });
-                            builder += "</ul>";
-                        }
+                            // Add properties
+                            if (component.properties && component.properties.length > 0) {
+                                builder += "<h4>Properties:</h4><ul>";
+                                component.properties.forEach(function(property) {
+                                    builder += `<li><strong>${property.name}</strong>: ${property.description}</li>`;
+                                });
+                                builder += "</ul>";
+                            }
 
-                        // Add properties
-                        if (component.properties && component.properties.length > 0) {
-                            builder += "<h4>Properties:</h4><ul>";
-                            component.properties.forEach(function(property) {
-                                builder += `<li><strong>${property.name}</strong>: ${property.description}</li>`;
-                            });
-                            builder += "</ul>";
-                        }
+                            // Add blockProperties
+                            if (component.blockProperties && component.blockProperties.length > 0) {
+                                builder += "<h4>Block Properties:</h4><ul>";
+                                component.blockProperties.forEach(function(property) {
+                                    builder += `<li><strong>${property.name}</strong>: ${property.description}</li>`;
+                                });
+                                builder += "</ul>";
+                            }
 
-                        // Add blockProperties
-                        if (component.blockProperties && component.blockProperties.length > 0) {
-                            builder += "<h4>Block Properties:</h4><ul>";
-                            component.blockProperties.forEach(function(property) {
-                                builder += `<li><strong>${property.name}</strong>: ${property.description}</li>`;
-                            });
-                            builder += "</ul>";
-                        }
+                            // Add Designer Properties (if they exist)
+                            if (component.designerProperties && component.designerProperties.length > 0) {
+                                builder += "<h4>Designer Properties:</h4><ul>";
+                                component.designerProperties.forEach(function(property) {
+                                    builder += `<li><strong>${property.name}</strong>: ${property.description}</li>`;
+                                });
+                                builder += "</ul>";
+                            }
 
-                        // Add Designer Properties (if they exist)
-                        if (component.designerProperties && component.designerProperties.length > 0) {
-                            builder += "<h4>Designer Properties:</h4><ul>";
-                            component.designerProperties.forEach(function(property) {
-                                builder += `<li><strong>${property.name}</strong>: ${property.description}</li>`;
-                            });
-                            builder += "</ul>";
-                        }
-
-                        // Add helper data (if exists)
-                        if (component.helper && component.helper.data === 1) {
-                            builder += "<h4>Helper Blocks:</h4>";
-                            builder += `<p><strong>Type:</strong> ${component.helper.type}</p>`;
-                            builder += `<p><strong>Data:</strong> ${JSON.stringify(component.helper.data, null, 2)}</p>`;
-                        }
-                    });
+                            // Add helper data (if exists)
+                            if (component.helper && component.helper.data === 1) {
+                                builder += "<h4>Helper Blocks:</h4>";
+                                builder += `<p><strong>Type:</strong> ${component.helper.type}</p>`;
+                                builder += `<p><strong>Data:</strong> ${JSON.stringify(component.helper.data, null, 2)}</p>`;
+                            }
+                        });
+                    }
 
                     // Update the progress bar
                     document.getElementById('progress-bar').style.width = '100%';
@@ -183,7 +190,7 @@
                     document.getElementById('output').classList.remove('hidden');
                     alert("Docs generated successfully!");
                 }).catch(function(error) {
-                    alert("Error parsing component.json: " + error.message);
+                    alert("Error reading the .aix file: " + error.message);
                 });
             }).catch(function(error) {
                 alert("Error reading the .aix file: " + error.message);
