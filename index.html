@@ -3,220 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Documentation Warlock - Documentation Generator for Warlock Users!</title>
+    <title>DocsGenerator Tool</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            padding: 20px;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
         }
         .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            width: 500px;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
         }
-        h2 {
-            color: #007BFF;
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .progress {
+            height: 100%;
+            width: 0;
+            background: #4caf50;
+            transition: width 0.3s;
         }
         .hidden {
             display: none;
         }
-        #progress {
-            width: 100%;
-            height: 20px;
-            margin-top: 10px;
-            background: #e0e0e0;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-        #progress-bar {
-            height: 100%;
-            background: #4caf50;
-            width: 0;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 10px 0;
-        }
-        table, th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
-        th {
-            background-color: #f4f4f4;
-        }
-        th, td {
-            text-align: left;
-        }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
-
 <div class="container">
-    <h2>Documentation Warlock</h2>
-    <input type="file" id="fileInput" accept=".aix">
-    <button onclick="generateDocs()">Generate Docs</button>
-
-    <div id="result"></div>
-    <div id="progress" class="hidden">
-        <div id="progress-bar"></div>
+    <h2>DocsGenerator Tool</h2>
+    <p>Select an .aix file to generate documentation:</p>
+    <input type="file" id="fileInput" accept=".aix" />
+    <div class="progress-bar hidden" id="progressBar">
+        <div class="progress" id="progress"></div>
     </div>
-
-    <textarea id="output" class="hidden" rows="10" cols="50"></textarea>
+    <div id="result"></div>
+    <button id="generate">Generate Documentation</button>
 </div>
 
 <script>
-    let selectedFile;
-    let builder = "";
+    const fileInput = document.getElementById('fileInput');
+    const progressBar = document.getElementById('progressBar');
+    const progress = document.getElementById('progress');
+    const result = document.getElementById('result');
+    const generateButton = document.getElementById('generate');
+    
+    let selectedFile = null;
 
-    document.getElementById('fileInput').addEventListener('change', function(event) {
+    fileInput.addEventListener('change', (event) => {
         selectedFile = event.target.files[0];
-        if (selectedFile) {
-            document.getElementById('result').innerText = `Selected file: ${selectedFile.name}`;
-        }
     });
 
-    function generateDocs() {
+    generateButton.addEventListener('click', () => {
         if (!selectedFile) {
-            alert("Please choose an .aix file!");
+            alert('Please choose an .aix file!');
             return;
         }
-
-        // Show progress bar
-        document.getElementById('progress').classList.remove('hidden');
-        document.getElementById('result').innerText = "Reading .aix file...";
-
+        
         const reader = new FileReader();
-        reader.onload = function(e) {
-            const zip = new JSZip();
-            zip.loadAsync(e.target.result).then(function(contents) {
-                let componentJson = null;
 
-                // Search for components.json file
-                Object.keys(contents.files).forEach(function(filename) {
-                    if (filename.endsWith("components.json")) {
-                        componentJson = contents.files[filename];
-                    }
-                });
+        reader.onload = async (e) => {
+            progressBar.classList.remove('hidden');
+            progress.style.width = '10%';
 
-                if (!componentJson) {
-                    alert("components.json not found in .aix file.");
-                    return;
+            try {
+                const zip = await JSZip.loadAsync(e.target.result);
+                const componentsJsonFile = Object.keys(zip.files).find(file => file.endsWith('components.json'));
+
+                if (!componentsJsonFile) {
+                    throw new Error('components.json not found in the .aix file');
                 }
 
-                componentJson.async("text").then(function(text) {
-                    let jsonData = null;
-                    try {
-                        jsonData = JSON.parse(text);
-                    } catch (e) {
-                        alert("Error parsing JSON: " + e.message);
-                        return;
-                    }
+                progress.style.width = '30%';
+                const componentsContent = await zip.file(componentsJsonFile).async('text');
+                const components = JSON.parse(componentsContent);
 
-                    builder = "";
-                    if (Array.isArray(jsonData)) {
-                        jsonData.forEach(function(component) {
-                            builder += `<h3> Docs for: ${component.name}</h3>`;
+                let documentation = '';
 
-                            // Add events
-                            if (component.events && component.events.length > 0) {
-                                builder += "<h4>Events:</h4><ul>";
-                                component.events.forEach(function(event) {
-                                    builder += `<li><strong>${event.name}</strong>: ${event.description}</li>`;
-                                        if (events.parameters && events.parameters.length > 0) {
-                                        builder += "<ul>";
-                                        events.parameters.forEach(function(param) {
-                                            builder += `<li><strong>Parameter:</strong> ${param.name} (Type: ${param.type})</li>`;
-                                        });
-                                        builder += "</ul>";
+                components.forEach((component, index) => {
+                    documentation += `<h2>Docs for: ${component.name}</h2>`;
+
+                    if (component.events.length) {
+                        documentation += '<h3>Events</h3>';
+                        component.events.forEach(event => {
+                            documentation += `<h4>${event.name}</h4><p>${event.description}</p>`;
+                            if (event.params.length) {
+                                documentation += '<table border="1"><tr><th>Param</th><th>Type</th></tr>';
+                                event.params.forEach(param => {
+                                    documentation += `<tr><td>${param.name}</td><td>${param.type}</td></tr>`;
                                 });
-                                builder += "</ul>";
-                            }
-
-                            // Add methods
-                            if (component.methods && component.methods.length > 0) {
-                                builder += "<h4>Methods:</h4><ul>";
-                                component.methods.forEach(function(method) {
-                                    builder += `<li><strong>${method.name}</strong>: ${method.description}</li>`;
-                                    if (method.parameters && method.parameters.length > 0) {
-                                        builder += "<ul>";
-                                        method.parameters.forEach(function(param) {
-                                            builder += `<li><strong>Parameter:</strong> ${param.name} (Type: ${param.type})</li>`;
-                                        });
-                                        builder += "</ul>";
-                                    }
-                                });
-                                builder += "</ul>";
-                            }
-
-                            // Add properties
-                            if (component.properties && component.properties.length > 0) {
-                                builder += "<h4>Properties:</h4><ul>";
-                                component.properties.forEach(function(property) {
-                                    builder += `<li><strong>${property.name}</strong>: ${property.description}</li>`;
-                                        if (properties.parameters && properties.parameters.length > 0) {
-                                        builder += "<ul>";
-                                        properties.parameters.forEach(function(param) {
-                                            builder += `<li><strong>Parameter:</strong> ${param.name} (Type: ${param.type})</li>`;
-                                        });
-                                        builder += "</ul>";
-                                });
-                                builder += "</ul>";
-                            }
-
-                            // Add blockProperties
-                            if (component.blockProperties && component.blockProperties.length > 0) {
-                                builder += "<h4>Block Properties:</h4><ul>";
-                                component.blockProperties.forEach(function(property) {
-                                    builder += `<li><strong>${property.name}</strong>: ${property.description}</li>`;
-                                        if (blockProperties.parameters && blockProperties.parameters.length > 0) {
-                                        builder += "<ul>";
-                                        blockProperties.parameters.forEach(function(param) {
-                                            builder += `<li><strong>Parameter:</strong> ${param.name} (Type: ${param.type})</li>`;
-                                        });
-                                        builder += "</ul>";
-                                });
-                                builder += "</ul>";
-                            }
-
-                            // Add Designer Properties (if they exist)
-                            if (component.designerProperties && component.designerProperties.length > 0) {
-                                builder += "<h4>Designer Properties:</h4><ul>";
-                                component.designerProperties.forEach(function(property) {
-                                    builder += `<li><strong>${property.name}</strong>: ${designerProperties.description}</li>`;
-                                        if (designerProperties.parameters && method.parameters.length > 0) {
-                                        builder += "<ul>";
-                                        designerProperties.parameters.forEach(function(param) {
-                                            builder += `<li><strong>Parameter:</strong> ${param.name} (Type: ${param.type})</li>`;
-                                        });
-                                        builder += "</ul>";
-                                });
-                                builder += "</ul>";
+                                documentation += '</table>';
                             }
                         });
                     }
 
-                    // Update the progress bar
-                    document.getElementById('progress-bar').style.width = '100%';
+                    if (component.methods.length) {
+                        documentation += '<h3>Methods</h3>';
+                        component.methods.forEach(method => {
+                            documentation += `<h4>${method.name}</h4><p>${method.description}</p>`;
+                            if (method.params.length) {
+                                documentation += '<table border="1"><tr><th>Param</th><th>Type</th></tr>';
+                                method.params.forEach(param => {
+                                    documentation += `<tr><td>${param.name}</td><td>${param.type}</td></tr>`;
+                                });
+                                documentation += '</table>';
+                            }
+                            if (method.returnType) {
+                                documentation += `<p>Return type: ${method.returnType}</p>`;
+                            }
+                        });
+                    }
 
-                    // Show output in textarea
-                    document.getElementById('output').value = builder;
-                    document.getElementById('output').classList.remove('hidden');
-                    alert("Docs generated successfully!");
-                }).catch(function(error) {
-                    alert("Error reading the .aix file: " + error.message);
+                    if (component.blockProperties.length) {
+                        documentation += '<h3>Block Properties</h3>';
+                        component.blockProperties.forEach(property => {
+                            documentation += `<h4>${property.name}</h4><p>${property.description}</p>`;
+                            if (property.rw) {
+                                documentation += `<p>Property Type: ${property.rw}</p>`;
+                            }
+                            if (property.type) {
+                                documentation += `<p>Accepts: ${property.type}</p>`;
+                            }
+                            if (property.returnType) {
+                                documentation += `<p>Return type: ${property.returnType}</p>`;
+                            }
+                        });
+                    }
+
+                    if (component.designerProperties?.length) {
+                        documentation += '<h3>Designer Properties</h3>';
+                        component.designerProperties.forEach(property => {
+                            documentation += `<h4>${property.name}</h4><p>${property.description}</p>`;
+                            if (property.defaultValue) {
+                                documentation += `<p>Default Value: ${property.defaultValue}</p>`;
+                            }
+                            if (property.type) {
+                                documentation += `<p>Type: ${property.type}</p>`;
+                            }
+                        });
+                    }
                 });
-            }).catch(function(error) {
-                alert("Error reading the .aix file: " + error.message);
-            });
+
+                result.innerHTML = documentation;
+                progress.style.width = '100%';
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                progressBar.classList.add('hidden');
+                progress.style.width = '0';
+            }
         };
 
         reader.readAsArrayBuffer(selectedFile);
-    }
+    });
 </script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </body>
 </html>
