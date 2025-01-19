@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Documentation Warlock</title>
+    <title>Documentation Warlock - Documentation Generator for Warlock Users!</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -94,12 +94,12 @@
         reader.onload = function(e) {
             const zip = new JSZip();
             zip.loadAsync(e.target.result).then(function(contents) {
-                let componentsJson = null;
+                let componentJson = null;
 
                 // Search for components.json file
                 Object.keys(contents.files).forEach(function(filename) {
-                    if (filename.endsWith("components.json")) {
-                        componentsJson = contents.files[filename];
+                    if (filename.endsWith("component.json")) {
+                        componentJson = contents.files[filename];
                     }
                 });
 
@@ -108,7 +108,7 @@
                     return;
                 }
 
-                componentsJson.async("text").then(function(text) {
+                componentJson.async("text").then(function(text) {
                     const jsonData = JSON.parse(text);
                     builder = "";
 
@@ -183,7 +183,7 @@
                     document.getElementById('output').classList.remove('hidden');
                     alert("Docs generated successfully!");
                 }).catch(function(error) {
-                    alert("Error parsing components.json: " + error.message);
+                    alert("Error parsing component.json: " + error.message);
                 });
             }).catch(function(error) {
                 alert("Error reading the .aix file: " + error.message);
