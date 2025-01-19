@@ -35,6 +35,21 @@
             background: #4caf50;
             width: 0;
         }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        th, td {
+            text-align: left;
+        }
     </style>
     <!-- Properly include the JSZip library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -105,6 +120,14 @@
                             builder += "<h4>Events:</h4><ul>";
                             component.events.forEach(function(event) {
                                 builder += `<li>${event.name}: ${event.description}</li>`;
+                                // Parameters Table for Events
+                                if (event.params && event.params.length > 0) {
+                                    builder += "<table><thead><tr><th>Parameter</th><th>Type</th></tr></thead><tbody>";
+                                    event.params.forEach(function(param) {
+                                        builder += `<tr><td>${param.name}</td><td>${param.type}</td></tr>`;
+                                    });
+                                    builder += "</tbody></table>";
+                                }
                             });
                             builder += "</ul>";
                         }
@@ -114,6 +137,14 @@
                             builder += "<h4>Methods:</h4><ul>";
                             component.methods.forEach(function(method) {
                                 builder += `<li>${method.name}: ${method.description}</li>`;
+                                // Parameters Table for Methods
+                                if (method.params && method.params.length > 0) {
+                                    builder += "<table><thead><tr><th>Parameter</th><th>Type</th></tr></thead><tbody>";
+                                    method.params.forEach(function(param) {
+                                        builder += `<tr><td>${param.name}</td><td>${param.type}</td></tr>`;
+                                    });
+                                    builder += "</tbody></table>";
+                                }
                             });
                             builder += "</ul>";
                         }
@@ -123,6 +154,10 @@
                             builder += "<h4>Properties:</h4><ul>";
                             component.blockProperties.forEach(function(property) {
                                 builder += `<li>${property.name}: ${property.description}</li>`;
+                                // Parameters Table for Properties (if available)
+                                if (property.type) {
+                                    builder += `<table><thead><tr><th>Type</th><th>Accepts</th></tr></thead><tbody><tr><td>${property.type}</td><td>${property.accepts}</td></tr></tbody></table>`;
+                                }
                             });
                             builder += "</ul>";
                         }
@@ -144,4 +179,3 @@
 
 </body>
 </html>
-
