@@ -126,6 +126,12 @@
                                 builder += "<h4>Events:</h4><ul>";
                                 component.events.forEach(function(event) {
                                     builder += `<li><strong>${event.name}</strong>: ${event.description}</li>`;
+                                        if (events.parameters && events.parameters.length > 0) {
+                                        builder += "<ul>";
+                                        events.parameters.forEach(function(param) {
+                                            builder += `<li><strong>Parameter:</strong> ${param.name} (Type: ${param.type})</li>`;
+                                        });
+                                        builder += "</ul>";
                                 });
                                 builder += "</ul>";
                             }
@@ -151,6 +157,12 @@
                                 builder += "<h4>Properties:</h4><ul>";
                                 component.properties.forEach(function(property) {
                                     builder += `<li><strong>${property.name}</strong>: ${property.description}</li>`;
+                                        if (properties.parameters && properties.parameters.length > 0) {
+                                        builder += "<ul>";
+                                        properties.parameters.forEach(function(param) {
+                                            builder += `<li><strong>Parameter:</strong> ${param.name} (Type: ${param.type})</li>`;
+                                        });
+                                        builder += "</ul>";
                                 });
                                 builder += "</ul>";
                             }
@@ -160,6 +172,12 @@
                                 builder += "<h4>Block Properties:</h4><ul>";
                                 component.blockProperties.forEach(function(property) {
                                     builder += `<li><strong>${property.name}</strong>: ${property.description}</li>`;
+                                        if (blockProperties.parameters && blockProperties.parameters.length > 0) {
+                                        builder += "<ul>";
+                                        blockProperties.parameters.forEach(function(param) {
+                                            builder += `<li><strong>Parameter:</strong> ${param.name} (Type: ${param.type})</li>`;
+                                        });
+                                        builder += "</ul>";
                                 });
                                 builder += "</ul>";
                             }
@@ -168,16 +186,15 @@
                             if (component.designerProperties && component.designerProperties.length > 0) {
                                 builder += "<h4>Designer Properties:</h4><ul>";
                                 component.designerProperties.forEach(function(property) {
-                                    builder += `<li><strong>${property.name}</strong>: ${property.description}</li>`;
+                                    builder += `<li><strong>${property.name}</strong>: ${designerProperties.description}</li>`;
+                                        if (designerProperties.parameters && method.parameters.length > 0) {
+                                        builder += "<ul>";
+                                        designerProperties.parameters.forEach(function(param) {
+                                            builder += `<li><strong>Parameter:</strong> ${param.name} (Type: ${param.type})</li>`;
+                                        });
+                                        builder += "</ul>";
                                 });
                                 builder += "</ul>";
-                            }
-
-                            // Add helper data (if exists)
-                            if (component.helper && component.helper.data === 1) {
-                                builder += "<h4>Helper Blocks:</h4>";
-                                builder += `<p><strong>Type:</strong> ${component.helper.type}</p>`;
-                                builder += `<p><strong>Data:</strong> ${JSON.stringify(component.helper.data, null, 2)}</p>`;
                             }
                         });
                     }
