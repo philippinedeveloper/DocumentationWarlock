@@ -36,8 +36,7 @@
             width: 0;
         }
     </style>
-
-    <!-- Include JSZip library -->
+    <!-- Properly include the JSZip library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
@@ -136,8 +135,6 @@
                     document.getElementById('output').classList.remove('hidden');
                     alert("Docs generated successfully!");
                 });
-            }).catch(function(error) {
-                alert("Error loading .aix file: " + error.message);
             });
         };
 
@@ -147,3 +144,4 @@
 
 </body>
 </html>
+
