@@ -141,28 +141,30 @@
                         }
 
                         // Add properties
-                        if (component.properties && component.properties.length > 0 && component.blockProperties && component.blockProperties.length > 0) {
-                            builder += "<h4>Designer Properties:</h4><ul>";
+                        if (component.properties && component.properties.length > 0) {
+                            builder += "<h4>Properties:</h4><ul>";
                             component.properties.forEach(function(property) {
                                 builder += `<li><strong>${property.name}</strong>: ${property.description}</li>`;
                             });
                             builder += "</ul>";
+                        }
 
-                            // Add blockProperties
-                            builder += "<h4>Properties:</h4><ul>";
+                        // Add blockProperties
+                        if (component.blockProperties && component.blockProperties.length > 0) {
+                            builder += "<h4>Block Properties:</h4><ul>";
                             component.blockProperties.forEach(function(property) {
                                 builder += `<li><strong>${property.name}</strong>: ${property.description}</li>`;
                             });
                             builder += "</ul>";
-                            
-                            // Add DesignerProperties if they exist
-                            if (component.properties && component.designerProperties.length > 0) {
-                                builder += "<h4>Designer Properties:</h4><ul>";
-                                component.properties.forEach(function(property) {
-                                    builder += `<li><strong>${property.name}</strong>: ${property.description}</li>`;
-                                });
-                                builder += "</ul>";
-                            }
+                        }
+
+                        // Add Designer Properties (if they exist)
+                        if (component.designerProperties && component.designerProperties.length > 0) {
+                            builder += "<h4>Designer Properties:</h4><ul>";
+                            component.designerProperties.forEach(function(property) {
+                                builder += `<li><strong>${property.name}</strong>: ${property.description}</li>`;
+                            });
+                            builder += "</ul>";
                         }
 
                         // Add helper data (if exists)
@@ -173,13 +175,18 @@
                         }
                     });
 
+                    // Update the progress bar
                     document.getElementById('progress-bar').style.width = '100%';
 
                     // Show output in textarea
                     document.getElementById('output').value = builder;
                     document.getElementById('output').classList.remove('hidden');
                     alert("Docs generated successfully!");
+                }).catch(function(error) {
+                    alert("Error parsing components.json: " + error.message);
                 });
+            }).catch(function(error) {
+                alert("Error reading the .aix file: " + error.message);
             });
         };
 
