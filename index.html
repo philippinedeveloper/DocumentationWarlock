@@ -119,7 +119,7 @@
                         if (component.events && component.events.length > 0) {
                             builder += "<h4>Events:</h4><ul>";
                             component.events.forEach(function(event) {
-                                builder += `<li>${event.name}: ${event.description}</li>`;
+                                builder += `<li><strong>${event.name}</strong>: ${event.description}</li>`;
                             });
                             builder += "</ul>";
                         }
@@ -128,25 +128,48 @@
                         if (component.methods && component.methods.length > 0) {
                             builder += "<h4>Methods:</h4><ul>";
                             component.methods.forEach(function(method) {
-                                builder += `<li>${method.name}: ${method.description}</li>`;
+                                builder += `<li><strong>${method.name}</strong>: ${method.description}</li>`;
+                                if (method.parameters && method.parameters.length > 0) {
+                                    builder += "<ul>";
+                                    method.parameters.forEach(function(param) {
+                                        builder += `<li><strong>Parameter:</strong> ${param.name} (Type: ${param.type})</li>`;
+                                    });
+                                    builder += "</ul>";
+                                }
                             });
                             builder += "</ul>";
                         }
 
                         // Add properties
-                        if (component.blockProperties && component.blockProperties.length > 0) {
-                            builder += "<h4>Properties:</h4><ul>";
-                            component.blockProperties.forEach(function(property) {
-                                builder += `<li>${property.name}: ${property.description}</li>`;
+                        if (component.properties && component.properties.length > 0 && component.blockProperties && component.blockProperties.length > 0) {
+                            builder += "<h4>Designer Properties:</h4><ul>";
+                            component.properties.forEach(function(property) {
+                                builder += `<li><strong>${property.name}</strong>: ${property.description}</li>`;
                             });
                             builder += "</ul>";
+
+                            // Add blockProperties
+                            builder += "<h4>Properties:</h4><ul>";
+                            component.blockProperties.forEach(function(property) {
+                                builder += `<li><strong>${property.name}</strong>: ${property.description}</li>`;
+                            });
+                            builder += "</ul>";
+                            
+                            // Add DesignerProperties if they exist
+                            if (component.properties && component.designerProperties.length > 0) {
+                                builder += "<h4>Designer Properties:</h4><ul>";
+                                component.properties.forEach(function(property) {
+                                    builder += `<li><strong>${property.name}</strong>: ${property.description}</li>`;
+                                });
+                                builder += "</ul>";
+                            }
                         }
 
                         // Add helper data (if exists)
-                        if (component.helper && component.helper.data) {
+                        if (component.helper && component.helper.data === 1) {
                             builder += "<h4>Helper Blocks:</h4>";
-                            builder += `<p>Type: ${component.helper.type}</p>`;
-                            builder += `<p>Data: ${JSON.stringify(component.helper.data)}</p>`;
+                            builder += `<p><strong>Type:</strong> ${component.helper.type}</p>`;
+                            builder += `<p><strong>Data:</strong> ${JSON.stringify(component.helper.data, null, 2)}</p>`;
                         }
                     });
 
