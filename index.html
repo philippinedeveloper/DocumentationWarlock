@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation Warlock</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        h2 {
+            color: #007BFF;
+        }
+        .hidden {
+            display: none;
+        }
+        #progress {
+            width: 100%;
+            height: 20px;
+            margin-top: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        #progress-bar {
+            height: 100%;
+            background: #4caf50;
+            width: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Documentation Warlock</h2>
+    <input type="file" id="fileInput" accept=".aix">
+    <button onclick="generateDocs()">Generate Docs</button>
+
+    <div id="result"></div>
+    <div id="progress" class="hidden">
+        <div id="progress-bar"></div>
+    </div>
+
+    <textarea id="output" class="hidden" rows="10" cols="50"></textarea>
+</div>
+
+<script>
+    let selectedFile;
+    let builder = "";
+
+    document.getElementById('fileInput').addEventListener('change', function(event) {
+        selectedFile = event.target.files[0];
+        if (selectedFile) {
+            document.getElementById('result').innerText = `Selected file: ${selectedFile.name}`;
+        }
+    });
+
+    function generateDocs() {
+        if (!selectedFile) {
+            alert("Please choose an .aix file!");
+            return;
+        }
+
+        // Show progress bar
+        document.getElementById('progress').classList.remove('hidden');
+        document.getElementById('result').innerText = "Reading .aix file...";
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const zip = new JSZip();
+            zip.loadAsync(e.target.result).then(function(contents) {
+                let componentsJson = null;
+
+                // Search for components.json file
+                Object.keys(contents.files).forEach(function(filename) {
+                    if (filename.endsWith("components.json")) {
+                        componentsJson = contents.files[filename];
+                    }
+                });
+
+                if (!componentsJson) {
+                    alert("components.json not found in .aix file.");
+                    return;
+                }
+
+                componentsJson.async("text").then(function(text) {
+                    const jsonData = JSON.parse(text);
+                    builder = "";
+
+                    jsonData.forEach(function(component) {
+                        builder += `<h3> Docs for: ${component.name}</h3>`;
+
+                        // Add events
+                        if (component.events && component.events.length > 0) {
+                            builder += "<h4>Events:</h4><ul>";
+                            component.events.forEach(function(event) {
+                                builder += `<li>${event.name}: ${event.description}</li>`;
+                            });
+                            builder += "</ul>";
+                        }
+
+                        // Add methods
+                        if (component.methods && component.methods.length > 0) {
+                            builder += "<h4>Methods:</h4><ul>";
+                            component.methods.forEach(function(method) {
+                                builder += `<li>${method.name}: ${method.description}</li>`;
+                            });
+                            builder += "</ul>";
+                        }
+
+                        // Add properties
+                        if (component.blockProperties && component.blockProperties.length > 0) {
+                            builder += "<h4>Properties:</h4><ul>";
+                            component.blockProperties.forEach(function(property) {
+                                builder += `<li>${property.name}: ${property.description}</li>`;
+                            });
+                            builder += "</ul>";
+                        }
+                    });
+
+                    document.getElementById('progress-bar').style.width = '100%';
+
+                    // Show output in textarea
+                    document.getElementById('output').value = builder;
+                    document.getElementById('output').classList.remove('hidden');
+                    alert("Docs generated successfully!");
+
+                    // You can also implement a download feature here
+                });
+            });
+        };
+
+        reader.readAsArrayBuffer(selectedFile);
+    }
+
+    // Use JSZip for parsing .aix files
+    document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>');
+</script>
+
+</body>
+</html>
