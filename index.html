@@ -120,14 +120,6 @@
                             builder += "<h4>Events:</h4><ul>";
                             component.events.forEach(function(event) {
                                 builder += `<li>${event.name}: ${event.description}</li>`;
-                                // Parameters Table for Events
-                                if (event.params && event.params.length > 0) {
-                                    builder += "<table><thead><tr><th>Parameter</th><th>Type</th></tr></thead><tbody>";
-                                    event.params.forEach(function(param) {
-                                        builder += `<tr><td>${param.name}</td><td>${param.type}</td></tr>`;
-                                    });
-                                    builder += "</tbody></table>";
-                                }
                             });
                             builder += "</ul>";
                         }
@@ -137,14 +129,6 @@
                             builder += "<h4>Methods:</h4><ul>";
                             component.methods.forEach(function(method) {
                                 builder += `<li>${method.name}: ${method.description}</li>`;
-                                // Parameters Table for Methods
-                                if (method.params && method.params.length > 0) {
-                                    builder += "<table><thead><tr><th>Parameter</th><th>Type</th></tr></thead><tbody>";
-                                    method.params.forEach(function(param) {
-                                        builder += `<tr><td>${param.name}</td><td>${param.type}</td></tr>`;
-                                    });
-                                    builder += "</tbody></table>";
-                                }
                             });
                             builder += "</ul>";
                         }
@@ -154,12 +138,15 @@
                             builder += "<h4>Properties:</h4><ul>";
                             component.blockProperties.forEach(function(property) {
                                 builder += `<li>${property.name}: ${property.description}</li>`;
-                                // Parameters Table for Properties (if available)
-                                if (property.type) {
-                                    builder += `<table><thead><tr><th>Type</th><th>Accepts</th></tr></thead><tbody><tr><td>${property.type}</td><td>${property.accepts}</td></tr></tbody></table>`;
-                                }
                             });
                             builder += "</ul>";
+                        }
+
+                        // Add helper data (if exists)
+                        if (component.helper && component.helper.data) {
+                            builder += "<h4>Helper Blocks:</h4>";
+                            builder += `<p>Type: ${component.helper.type}</p>`;
+                            builder += `<p>Data: ${JSON.stringify(component.helper.data)}</p>`;
                         }
                     });
 
