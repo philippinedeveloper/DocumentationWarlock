@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocumentationWarlock with Blockly</title>
+    <title>DocumentationWarlock with Blockly Blocks</title>
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -237,7 +237,7 @@
         const blockStyle = blockStyleSelector.value === 'mit' ? 'mit_style' :
                            blockStyleSelector.value === 'kodular' ? 'kodular_style' :
                            'niotron_style';
-        
+
         const block = {
             type: 'event_block',
             message0: event.name,
@@ -282,17 +282,38 @@
         const zip = new JSZip();
         
         blocksXML.forEach((block, index) => {
-            zip.file(`block_${index + 1}.xml`, JSON.stringify(block));
+            // Render Blockly block to SVG and convert to PNG
+            const blockDiv = document.createElement('div');
+            Blockly.Blocks[block.type] = {
+                init: function() {
+                    this.jsonInit(block);
+                }
+            };
+            
+            const workspace = Blockly.inject(blockDiv, {
+                toolbox: '<xml><category name="Generated Blocks"></category></xml>'
+            });
+            
+            const blockInstance = workspace.newBlock(block.type);
+            const svg = Blockly.Svg.generateSvg(blockInstance);
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const image = new Image();
+
+            image.onload = function () {
+                ctx.drawImage(image, 0, 0);
+                const pngData = canvas.toDataURL('image/png');
+                zip.file(`block${index + 1}.png`, pngData.split(',')[1], {base64: true});
+            };
+            image.src = 'data:image/svg+xml;base64,' + btoa(svg.outerHTML);
         });
 
-        zip.generateAsync({ type: 'blob' })
-            .then(function (content) {
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(content);
-                link.download = 'blockly_blocks.zip';
-                link.click();
-            });
+        zip.generateAsync({type: "blob"}).then(function(content) {
+            saveAs(content, "blocks.zip");
+        });
     });
 </script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 </body>
 </html>
