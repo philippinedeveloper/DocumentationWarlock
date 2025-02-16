@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocumentationWarlock</title>
+    <title>DocumentationWarlock with Blockly</title>
     <style>
-        /* General Styles */
         body {
             font-family: 'Poppins', sans-serif;
             margin: 0;
@@ -114,7 +113,6 @@
             transform: scale(0.98);
         }
 
-        /* Hidden by default */
         .hidden {
             display: none;
         }
@@ -131,17 +129,28 @@
     </div>
     <textarea id="result" readonly placeholder="Generated documentation will appear here..."></textarea>
     <button id="generate">Generate Documentation</button>
+    <label for="blockStyle">Choose Block Style:</label>
+    <select id="blockStyle">
+        <option value="mit">MIT App Inventor</option>
+        <option value="kodular">Kodular</option>
+        <option value="niotron">Niotron</option>
+    </select>
+    <button id="download">Download Blockly Blocks ZIP</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://unpkg.com/blockly/blockly.min.js"></script>
 <script>
     const fileInput = document.getElementById('fileInput');
     const progressBar = document.getElementById('progressBar');
     const progress = document.getElementById('progress');
     const result = document.getElementById('result');
     const generateButton = document.getElementById('generate');
-    
+    const downloadButton = document.getElementById('download');
+    const blockStyleSelector = document.getElementById('blockStyle');
+
     let selectedFile = null;
+    let blocksXML = [];
 
     fileInput.addEventListener('change', (event) => {
         selectedFile = event.target.files[0];
@@ -172,6 +181,7 @@
                 const components = JSON.parse(componentsContent);
 
                 let documentation = '';
+                blocksXML = [];
 
                 components.forEach((component, index) => {
                     documentation += `<h2>Docs for: ${component.name}</h2>`;
@@ -184,6 +194,7 @@
                                 documentation += '<table border="1"><tr><th>Param</th><th>Type</th></tr>';
                                 event.params.forEach(param => {
                                     documentation += `<tr><td>${param.name}</td><td>${param.type}</td></tr>`;
+                                    createBlockForEvent(event, param);
                                 });
                                 documentation += '</table>';
                             }
@@ -198,40 +209,12 @@
                                 documentation += '<table border="1"><tr><th>Param</th><th>Type</th></tr>';
                                 method.params.forEach(param => {
                                     documentation += `<tr><td>${param.name}</td><td>${param.type}</td></tr>`;
+                                    createBlockForMethod(method, param);
                                 });
                                 documentation += '</table>';
                             }
                             if (method.returnType) {
                                 documentation += `<p>Return type: ${method.returnType}</p>`;
-                            }
-                        });
-                    }
-
-                    if (component.blockProperties.length) {
-                        documentation += '<h3>Block Properties</h3>';
-                        component.blockProperties.forEach(property => {
-                            documentation += `<h4>${property.name}</h4><p>${property.description}</p>`;
-                            if (property.rw) {
-                                documentation += `<p>Property Type: ${property.rw}</p>`;
-                            }
-                            if (property.type) {
-                                documentation += `<p>Accepts: ${property.type}</p>`;
-                            }
-                            if (property.returnType) {
-                                documentation += `<p>Return type: ${property.returnType}</p>`;
-                            }
-                        });
-                    }
-
-                    if (component.designerProperties?.length) {
-                        documentation += '<h3>Designer Properties</h3>';
-                        component.designerProperties.forEach(property => {
-                            documentation += `<h4>${property.name}</h4><p>${property.description}</p>`;
-                            if (property.defaultValue) {
-                                documentation += `<p>Default Value: ${property.defaultValue}</p>`;
-                            }
-                            if (property.type) {
-                                documentation += `<p>Type: ${property.type}</p>`;
                             }
                         });
                     }
@@ -248,6 +231,67 @@
         };
 
         reader.readAsArrayBuffer(selectedFile);
+    });
+
+    function createBlockForEvent(event, param) {
+        const blockStyle = blockStyleSelector.value === 'mit' ? 'mit_style' :
+                           blockStyleSelector.value === 'kodular' ? 'kodular_style' :
+                           'niotron_style';
+        
+        const block = {
+            type: 'event_block',
+            message0: event.name,
+            args0: [{
+                type: 'input_value',
+                name: 'PARAM',
+                check: 'String'
+            }],
+            style: blockStyle,
+            id: event.name
+        };
+        
+        blocksXML.push(block);
+    }
+
+    function createBlockForMethod(method, param) {
+        const blockStyle = blockStyleSelector.value === 'mit' ? 'mit_style' :
+                           blockStyleSelector.value === 'kodular' ? 'kodular_style' :
+                           'niotron_style';
+
+        const block = {
+            type: 'method_block',
+            message0: method.name,
+            args0: [{
+                type: 'input_value',
+                name: 'PARAM',
+                check: 'String'
+            }],
+            style: blockStyle,
+            id: method.name
+        };
+
+        blocksXML.push(block);
+    }
+
+    downloadButton.addEventListener('click', () => {
+        if (blocksXML.length === 0) {
+            alert('No blocks to download!');
+            return;
+        }
+
+        const zip = new JSZip();
+        
+        blocksXML.forEach((block, index) => {
+            zip.file(`block_${index + 1}.xml`, JSON.stringify(block));
+        });
+
+        zip.generateAsync({ type: 'blob' })
+            .then(function (content) {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = 'blockly_blocks.zip';
+                link.click();
+            });
     });
 </script>
 </body>
